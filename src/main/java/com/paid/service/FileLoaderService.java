@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 
 @Service
 public class FileLoaderService {
@@ -81,14 +82,46 @@ public class FileLoaderService {
                 new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
 
             String line;
-            int lineNumber = 1;
 
             while ((line = reader.readLine()) != null) {
                 CallDetailRecordsEntity callDetailRecordsEntity = new CallDetailRecordsEntity();
                 callDetailRecordsEntity.setFileName(file.getName());
-                callDetailRecordsEntity.setRecordLine(line);
 
                 String[] segment = line.split("\\|");
+
+                callDetailRecordsEntity.setRecordDate(Timestamp.valueOf(segment[0].replace(",",".")));
+                callDetailRecordsEntity.setlSpc(safeParseInt(segment[1]));
+                callDetailRecordsEntity.setlSsn(safeParseInt(segment[2]));
+                callDetailRecordsEntity.setlRi(safeParseInt(segment[3]));
+                callDetailRecordsEntity.setlGtI(safeParseInt(segment[4]));
+                callDetailRecordsEntity.setlGtDigits(segment[5]);
+                callDetailRecordsEntity.setrSpc(safeParseInt(segment[6]));
+                callDetailRecordsEntity.setrSsn(safeParseInt(segment[7]));
+                callDetailRecordsEntity.setrRi(safeParseInt(segment[8]));
+                callDetailRecordsEntity.setrGtI(safeParseInt(segment[9]));
+                callDetailRecordsEntity.setrGtDigits(segment[10]);
+                callDetailRecordsEntity.setServiceCode(segment[11]);
+                callDetailRecordsEntity.setOrNature(safeParseInt(segment[12]));
+                callDetailRecordsEntity.setOrPlan(safeParseInt(segment[13]));
+                callDetailRecordsEntity.setOrDigits(segment[14]);
+                callDetailRecordsEntity.setDeNature(safeParseInt(segment[15]));
+                callDetailRecordsEntity.setDePlan(safeParseInt(segment[16]));
+                callDetailRecordsEntity.setDeDigits(segment[17]);
+                callDetailRecordsEntity.setIsdnNature(safeParseInt(segment[18]));
+                callDetailRecordsEntity.setIsdnPlan(safeParseInt(segment[19]));
+                callDetailRecordsEntity.setMsisdn(segment[20]);
+                callDetailRecordsEntity.setVlrNature(safeParseInt(segment[21]));
+                callDetailRecordsEntity.setVlrPlan(safeParseInt(segment[22]));
+                callDetailRecordsEntity.setVlrDigits(segment[23]);
+                callDetailRecordsEntity.setImsi(segment[24]);
+                callDetailRecordsEntity.setStatus(segment[25]);
+                callDetailRecordsEntity.setType(segment[26]);
+                callDetailRecordsEntity.setTstamp(Timestamp.valueOf(segment[27].replace(",",".")));
+                callDetailRecordsEntity.setLocalDialogId(safeParseLong(segment[28]));
+                callDetailRecordsEntity.setRemoteDialogId(safeParseLong(segment[29]));
+                callDetailRecordsEntity.setDialogDuration(safeParseLong(segment[30]));
+                callDetailRecordsEntity.setUssdString(segment[31]);
+                callDetailRecordsEntity.setId(segment[32]);
 
                 if (segment.length > 25) {
                     String status = segment[25];
@@ -100,7 +133,6 @@ public class FileLoaderService {
                 } else {
                     numberOfFailedRecords++;
                 }
-                lineNumber++;
                 callDetailRecordsRepository.save(callDetailRecordsEntity);
             }
 
@@ -112,5 +144,29 @@ public class FileLoaderService {
         cdrLogsEntity.setNumberOfSuccessfullyLoadedRecords(numberOfSuccessfullyLoadedRecords);
         cdrLogsEntity.setUploadEndTime(java.time.OffsetTime.now());
         return cdrLogsEntity;
+    }
+
+    private Integer safeParseInt(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            // Aquí puedes loguear si quieres
+            return null;
+        }
+    }
+
+    private Long safeParseLong(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            // Puedes loguear el error si lo deseas
+            return null;
+        }
     }
 }
